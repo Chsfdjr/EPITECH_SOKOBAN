@@ -1,0 +1,90 @@
+/*
+** EPITECH PROJECT, 2022
+** sokoban ncurses
+** File description:
+** s
+*/
+
+#include "include/sokoban.h"
+
+int put_in_map(char *buffer, int longer)
+{
+    char **map = NULL;
+    soko game = {(player){0, 0}, NULL, NULL, NULL, 0, 0};
+
+    map = createmapfrombuffer(buffer, longer);
+    game.map = map;
+    if (map == NULL)
+        exit(84);
+    coordinate(map, longer);
+    return 0;
+}
+
+char **createmapfrombuffer(char *buffer, int y)
+{
+    char **map = NULL;
+    int x = 0;
+
+    map = malloc(sizeof(char *) * (y + 1));
+    map[y] = NULL;
+    for (int i = 0 ; i < y ; i++) {
+        x = count_largeur(buffer);
+        map[i] = malloc(sizeof(char) * (x + 1));
+        makepartofbuffer(map[i], buffer, x);
+        buffer = buffer + (x + 1);
+    }
+    return map;
+}
+
+soko coordinate(char **map, int y)
+{
+    soko game = allocate_coordinate(game, map, y);
+    int O = game.nb_store;
+    int X = game.nb_box;
+
+    game.map = map;
+    for (int i = 0 ; i < y ; i++) {
+        game = check_all_obj(game, i);
+    }
+    game.nb_store = O + 1;
+    game.nb_box = X + 1;
+    popup(game, y);
+    return game;
+}
+
+int ch_test(int ch)
+{
+    int end = 0;
+
+    if (ch == KEY_DC)
+        end = 1;
+    if (ch == 'a') {
+        refresh();
+        clear();
+    }
+    return end;
+}
+
+int popup(soko game, int y)
+{
+    int ch = 0;
+    int end = 0;
+    soko game_s = game;
+    int y_s = y;
+    initscr();
+    keypad(stdscr, TRUE);
+    display_map(game.map, y);
+    while (end != 1) {
+        game = all_test(game, y);
+        ch = getch();
+        end = ch_test(ch);
+        game = keyboard(game, ch);
+        game = testing_box(game);
+        clear();
+        display_map(game.map, y);
+        refresh();
+    }
+    free_struct(game);
+    endwin();
+    return 0;
+}
